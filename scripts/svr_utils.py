@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import math
 import os
 
 import numpy as np
 import pandas as pd
+from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 '''
 =============================================================================
@@ -21,8 +23,6 @@ It returns as outputs:
  - Y: The response matrix of dimension (subjects,)
 =============================================================================
 '''
-
-
 def form_XYMatrices(input_dir, input_file):
     features = pd.read_csv(os.path.join(input_dir, input_file), header=None)
     X = np.array(features[features.columns[:-1]])
@@ -31,3 +31,14 @@ def form_XYMatrices(input_dir, input_file):
     y = np.array(y[y.columns])[:, 0]
 
     return (X, y)
+
+"""
+Computes performance evaluation metrics for regression model.
+"""
+def get_metrics(y_true, y_pred):
+    results = {}
+    results['mse'] = mean_squared_error(y_true, y_pred)
+    results['rmse'] = math.sqrt(results['mse'])
+    results['mae'] = mean_absolute_error(y_true, y_pred)
+
+    return results

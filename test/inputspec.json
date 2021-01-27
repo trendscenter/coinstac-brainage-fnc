@@ -1,8 +1,12 @@
 [
   {
-    "input_train_csv_path": { "value": "local0_fnc_age_train.csv" },
-    "input_test_csv_path": { "value": "local0_fnc_age_test.csv" },
-    "split_type": { "value": "age_range_stratified" },
+    "data": {
+      "value": {
+        "train_csv_file": "local0_fnc_age_train.csv",
+        "test_csv_file": "local0_fnc_age_test.csv"
+      }
+    },
+    "split_type": { "value": "age_range_stratified"},
     "epsilon_local": { "value": 0.0},
     "fit_intercept_local": { "value": true},
     "intercept_scaling_local": { "value": 1.0},
@@ -25,9 +29,13 @@
     "shuffle": {"value": true}
   },
   {
-    "input_train_csv_path": { "value": "local1_fnc_age_train.csv" },
-    "input_test_csv_path": { "value": "local1_fnc_age_test.csv" },
-    "split_type": { "value": "age_range_stratified" },
+    "data": {
+      "value": {
+        "train_csv_file": "local1_fnc_age_train.csv",
+        "test_csv_file": "local1_fnc_age_test.csv"
+      }
+    },
+    "split_type": { "value": "age_range_stratified"},
     "epsilon_local": { "value": 0.0},
     "fit_intercept_local": { "value": true},
     "intercept_scaling_local": { "value": 1.0},
@@ -36,7 +44,7 @@
     "loss_local": { "value": "epsilon_insensitive"},
     "dual_local": { "value": true},
     "random_state_local": { "value": 0},
-    "max_iterations_local": { "value": 1000},
+    "max_iterations_local": { "value": 10000},
     "epsilon_owner": { "value": 0.0},
     "fit_intercept_owner": { "value": true},
     "intercept_scaling_owner": { "value": 1.0},
@@ -45,15 +53,18 @@
     "loss_owner": { "value": "epsilon_insensitive"},
     "dual_owner": { "value": true},
     "random_state_owner": { "value": 0},
-    "max_iterations_owner": { "value": 1000},
+    "max_iterations_owner": { "value": 10000},
     "test_size": {"value": 0.1},
     "shuffle": {"value": true}
   },
   {
-
-    "input_train_csv_path": { "value": "local2_fnc_age_train.csv" },
-    "input_test_csv_path": { "value": "local2_fnc_age_test.csv" },
-    "split_type": { "value": "age_range_stratified" },
+    "data": {
+      "value": {
+        "train_csv_file": "local2_fnc_age_train.csv",
+        "test_csv_file": "local2_fnc_age_test.csv"
+      }
+    },
+    "split_type": { "value": "age_range_stratified"},
     "epsilon_local": { "value": 0.0},
     "fit_intercept_local": { "value": true},
     "intercept_scaling_local": { "value": 1.0},
@@ -62,7 +73,7 @@
     "loss_local": { "value": "epsilon_insensitive"},
     "dual_local": { "value": true},
     "random_state_local": { "value": 0},
-    "max_iterations_local": { "value": 1000},
+    "max_iterations_local": { "value": 10000},
     "epsilon_owner": { "value": 0.0},
     "fit_intercept_owner": { "value": true},
     "intercept_scaling_owner": { "value": 1.0},
@@ -71,15 +82,18 @@
     "loss_owner": { "value": "epsilon_insensitive"},
     "dual_owner": { "value": true},
     "random_state_owner": { "value": 0},
-    "max_iterations_owner": { "value": 1000},
+    "max_iterations_owner": { "value": 10000},
     "test_size": {"value": 0.1},
     "shuffle": {"value": true}
   },
   {
-
-    "input_train_csv_path": { "value": "local3_fnc_age_train.csv" },
-    "input_test_csv_path": { "value": "local3_fnc_age_test.csv" },
-    "split_type": { "value": "age_range_stratified" },
+    "data": {
+      "value": {
+        "train_csv_file": "local3_fnc_age_train.csv",
+        "test_csv_file": "local3_fnc_age_test.csv"
+      }
+    },
+    "split_type": { "value": "age_range_stratified"},
     "epsilon_local": { "value": 0.0},
     "fit_intercept_local": { "value": true},
     "intercept_scaling_local": { "value": 1.0},
@@ -88,7 +102,7 @@
     "loss_local": { "value": "epsilon_insensitive"},
     "dual_local": { "value": true},
     "random_state_local": { "value": 0},
-    "max_iterations_local": { "value": 1000},
+    "max_iterations_local": { "value": 10000},
     "epsilon_owner": { "value": 0.0},
     "fit_intercept_owner": { "value": true},
     "intercept_scaling_owner": { "value": 1.0},
@@ -97,15 +111,18 @@
     "loss_owner": { "value": "epsilon_insensitive"},
     "dual_owner": { "value": true},
     "random_state_owner": { "value": 0},
-    "max_iterations_owner": { "value": 1000},
+    "max_iterations_owner": { "value": 10000},
     "test_size": {"value": 0.1},
     "shuffle": {"value": true}
   },
   {
-
-    "input_train_csv_path": { "value": "local4_fnc_age_train.csv" },
-    "input_test_csv_path": { "value": "local4_fnc_age_test.csv" },
-    "split_type": { "value": "age_range_stratified" },
+    "data": {
+      "value": {
+        "train_csv_file": "local4_fnc_age_train.csv",
+        "test_csv_file": "local4_fnc_age_test.csv"
+      }
+    },
+    "split_type": { "value": "age_range_stratified"},
     "epsilon_local": { "value": 0.0},
     "fit_intercept_local": { "value": true},
     "intercept_scaling_local": { "value": 1.0},
@@ -114,7 +131,7 @@
     "loss_local": { "value": "epsilon_insensitive"},
     "dual_local": { "value": true},
     "random_state_local": { "value": 0},
-    "max_iterations_local": { "value": 1000},
+    "max_iterations_local": { "value": 10000},
     "epsilon_owner": { "value": 0.0},
     "fit_intercept_owner": { "value": true},
     "intercept_scaling_owner": { "value": 1.0},
@@ -123,15 +140,18 @@
     "loss_owner": { "value": "epsilon_insensitive"},
     "dual_owner": { "value": true},
     "random_state_owner": { "value": 0},
-    "max_iterations_owner": { "value": 1000},
+    "max_iterations_owner": { "value": 10000},
     "test_size": {"value": 0.1},
     "shuffle": {"value": true}
   },
   {
-
-    "input_train_csv_path": { "value": "local5_fnc_age_train.csv" },
-    "input_test_csv_path": { "value": "local5_fnc_age_test.csv" },
-    "split_type": { "value": "age_range_stratified" },
+    "data": {
+      "value": {
+        "train_csv_file": "local5_fnc_age_train.csv",
+        "test_csv_file": "local5_fnc_age_test.csv"
+      }
+    },
+    "split_type": { "value": "age_range_stratified"},
     "epsilon_local": { "value": 0.0},
     "fit_intercept_local": { "value": true},
     "intercept_scaling_local": { "value": 1.0},
@@ -140,7 +160,7 @@
     "loss_local": { "value": "epsilon_insensitive"},
     "dual_local": { "value": true},
     "random_state_local": { "value": 0},
-    "max_iterations_local": { "value": 1000},
+    "max_iterations_local": { "value": 10000},
     "epsilon_owner": { "value": 0.0},
     "fit_intercept_owner": { "value": true},
     "intercept_scaling_owner": { "value": 1.0},
@@ -149,7 +169,7 @@
     "loss_owner": { "value": "epsilon_insensitive"},
     "dual_owner": { "value": true},
     "random_state_owner": { "value": 0},
-    "max_iterations_owner": { "value": 1000},
+    "max_iterations_owner": { "value": 10000},
     "test_size": {"value": 0.1},
     "shuffle": {"value": true}
   }

@@ -1,12 +1,10 @@
 import json
-import math
 
 import numpy as np
 from sklearn import preprocessing
-from sklearn.metrics import mean_squared_error, mean_absolute_error
 from sklearn.pipeline import make_pipeline
 from sklearn.svm import LinearSVR
-from svr_utils import form_XYMatrices
+from svr_utils import *
 
 """
 This code aggregates data from all the local sites and performs regression on the combined data.
@@ -15,14 +13,11 @@ This code aggregates data from all the local sites and performs regression on th
 """
 Performs LinearSVR on the passed data.
 """
-
-
 def aggregated_SVR(X_train, X_test, y_train, y_test):
     input_list = None
     for indx, conf in enumerate(json.loads(open('../test/inputspec.json').read())):
         if input_list is None:
-            conf.pop("input_train_csv_path")
-            conf.pop("input_test_csv_path")
+            conf.pop("data")
             input_list = conf
             break
 
@@ -47,44 +42,40 @@ def aggregated_SVR(X_train, X_test, y_train, y_test):
     intercept_aggr = svr2.intercept_
 
     y_train_pred = regr.predict(X_train)
-    mse_train_combined = mean_squared_error(y_train, y_train_pred)
-    rmse_train_combined = math.sqrt(mse_train_combined)
-    mae_train_local = mean_absolute_error(y_train, y_train_pred)
+    train_pref = get_metrics(y_train, y_train_pred)
 
     y_test_pred = regr.predict(X_test)
-    mse_test_combined = mean_squared_error(y_test, y_test_pred)
-    rmse_test_combined = math.sqrt(mse_test_combined)
-    mae_test_local = mean_absolute_error(y_test, y_test_pred)
+    test_pref = get_metrics(y_test, y_test_pred)
 
     output_dict = {
         # "intercept_aggregated": intercept_combined.tolist(),
         # "w_aggregated": w.tolist(),
         "n_train_samples_aggregated": len(y_train),
         "n_test_samples_aggregated": len(y_test),
-        "rmse_train_aggregated": float(rmse_train_combined),
-        "rmse_test_aggregated": float(rmse_test_combined),
-        "mae_train_aggregated": float(mae_train_local),
-        "mae_test_aggregated": float(mae_test_local),
+        "rmse_train_aggregated": float(train_pref['rmse']),
+        "rmse_test_aggregated": float(test_pref['rmse']),
+        "mae_train_aggregated": float(train_pref['mae']),
+        "mae_test_aggregated": float(test_pref['mae']),
         "phase": "aggregated",
     }
 
     print(output_dict)
 
+    return regr
+
 
 """
 Combines data from all the local sites.
 """
-
-
 def combine_all_local_data():
     X_train, y_train, X_test, y_test = None, None, None, None
     for indx, conf in enumerate(json.loads(open('../test/inputspec.json').read())):
         [local_X_train, local_y_train] = form_XYMatrices(
             input_dir=f"../test/input/local{indx}/simulatorRun/{conf['split_type']['value']}/",
-            input_file=conf['input_train_csv_path']['value'])
+            input_file=conf['data']['value']['train_csv_file'])
         [local_X_test, local_y_test] = form_XYMatrices(
             input_dir=f"../test/input/local{indx}/simulatorRun/{conf['split_type']['value']}/",
-            input_file=conf['input_test_csv_path']['value'])
+            input_file=conf['data']['value']['test_csv_file'])
         if X_train is None:
             X_train = local_X_train
             y_train = local_y_train
@@ -99,7 +90,64 @@ def combine_all_local_data():
     return (X_train, X_test, y_train, y_test)
 
 
-if __name__ == "__main__":
+def get_local_site_data(local_site_num):
+    conf = json.loads(open('../test/inputspec.json').read())[local_site_num]
+    [local_X_train, local_y_train] = form_XYMatrices(
+        input_dir=f"../test/input/local{local_site_num}/simulatorRun/{conf['split_type']['value']}/",
+        input_file=conf['data']['value']['train_csv_file'])
+    [local_X_test, local_y_test] = form_XYMatrices(
+        input_dir=f"../test/input/local{local_site_num}/simulatorRun/{conf['split_type']['value']}/",
+        input_file=conf['data']['value']['test_csv_file'])
+
+    return local_X_train, local_X_test, local_y_train, local_y_test
+
+
+"""
+Performs PCA for feature reduction
+"""
+def perform_pca(X_train, X_test):
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.decomposition import PCA
+
+    scaler = StandardScaler()
+    # Fit on training set only.
+    scaler.fit(X_train)
+    # Apply transform to both the training set and the test set.
+    X_train_pca = scaler.transform(X_train)
+    X_test_pca = scaler.transform(X_test)
+
+    # Make an instance of the Model
+    pca = PCA(.95)
+    pca.fit(X_train_pca)
+    X_train_pca = pca.transform(X_train_pca)
+    X_test_pca = pca.transform(X_test_pca)
+
+    return X_train_pca, X_test_pca
+
+
+def build_aggregated_model(pca=False):
     X_train, X_test, y_train, y_test = combine_all_local_data()
-    print("Combined train and test data from all the local clients. Running SVR now.")
-    aggregated_SVR(X_train, X_test, y_train, y_test)
+
+    print("Combined train and test data from all the local clients.")
+    if pca:
+        print("Using PCA features..")
+        X_train, X_test = perform_pca(X_train, X_test)
+
+    print("Running SVR now.")
+    model = aggregated_SVR(X_train, X_test, y_train, y_test)
+
+    """
+    Get metrics only for local-0 (holdout) site
+    """
+    local0_X_train, local0_X_test, local0_y_train, local0_y_test = get_local_site_data(0)
+    local0_y_train_pred = model.predict(local0_X_train)
+    local0_y_test_pred = model.predict(local0_X_test)
+    train_pref = get_metrics(local0_y_train, local0_y_train_pred)
+    test_pref = get_metrics(local0_y_test, local0_y_test_pred)
+    print("Model performance only on local0 train and test data:")
+    print("Train data: ", train_pref)
+    print("Test data: ", test_pref)
+
+
+if __name__ == "__main__":
+    build_aggregated_model(pca=False)

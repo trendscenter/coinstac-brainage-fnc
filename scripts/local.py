@@ -6,17 +6,15 @@ This script includes the local computations for brainage prediction using
 decentralized SVR with FNC as features
 """
 import json
-import math
 import os
 import sys
 
 import numpy as np
 from common_functions import list_recursive
 from sklearn import preprocessing
-from sklearn.metrics import mean_squared_error, mean_absolute_error
 from sklearn.pipeline import make_pipeline
 from sklearn.svm import LinearSVR
-from svr_utils import form_XYMatrices
+from svr_utils import *
 
 """
 ============================================================================
@@ -50,8 +48,6 @@ And gives the following output:
     arguments for sklearn linear SVR for owner
 ============================================================================
 """
-
-
 def local_0(args):
     input_list = args['input']
     state_list = args['state']
@@ -61,9 +57,8 @@ def local_0(args):
 
     owner = state_list["owner"] if "owner" in state_list else "local0"
 
-    train_data_file = input_list['input_train_csv_path']
-    test_data_file = input_list['input_test_csv_path']
-    # dep = input_list['dependents']
+    train_data_file = input_list['data']['train_csv_file']
+    test_data_file = input_list['data']['test_csv_file']
 
     [X_train, y_train] = form_XYMatrices(input_dir + os.sep + input_list['split_type'], train_data_file)
     [X_test, y_test] = form_XYMatrices(input_dir + os.sep + input_list['split_type'], test_data_file)
@@ -94,7 +89,6 @@ def local_0(args):
         output_dict = {"phase": "local_0"}
 
     else:
-        # X = X.astype(np.double)
         regr = make_pipeline(preprocessing.MinMaxScaler(),
                              LinearSVR
                              (epsilon=input_list["epsilon_local"],
@@ -115,14 +109,10 @@ def local_0(args):
         intercept_local = svr2.intercept_
 
         y_train_pred = regr.predict(X_train)
-        mse_train_local = mean_squared_error(y_train, y_train_pred)
-        rmse_train_local = math.sqrt(mse_train_local)
-        mae_train_local = mean_absolute_error(y_train, y_train_pred)
+        train_perf = get_metrics(y_train, y_train_pred)
 
         y_test_pred = regr.predict(X_test)
-        mse_test_local = mean_squared_error(y_test, y_test_pred)
-        rmse_test_local = math.sqrt(mse_test_local)
-        mae_test_local = mean_absolute_error(y_test, y_test_pred)
+        test_perf = get_metrics(y_test, y_test_pred)
 
         cache_dict = {}
         output_dict = {
@@ -130,10 +120,10 @@ def local_0(args):
             "w_local": w.tolist(),
             "n_train_samples_local": len(y_train),
             "n_test_samples_local": len(y_test),
-            "rmse_train_local": float(rmse_train_local),
-            "rmse_test_local": float(rmse_test_local),
-            "mae_train_local": float(mae_train_local),
-            "mae_test_local": float(mae_test_local),
+            "rmse_train_local": float(train_perf['rmse']),
+            "rmse_test_local": float(test_perf['rmse']),
+            "mae_train_local": float(train_perf['mae']),
+            "mae_test_local": float(test_perf['mae']),
             "phase": "local_0",
         }
 
@@ -175,8 +165,6 @@ And gives the following output:
     computation_phase : local_1
 ============================================================================
 """
-
-
 def load_data(dir_name, file_name):
     file_with_path = os.path.join(dir_name, file_name)
 
@@ -232,23 +220,18 @@ def local_1(args):
         y_train_pred = regr.predict(U_train)
         y_test_pred = regr.predict(U_test)
 
-        mse_train = mean_squared_error(y_train, y_train_pred)
-        rmse_train = math.sqrt(mse_train)
-        mae_train_local = mean_absolute_error(y_train, y_train_pred)
-
-        mse_test = mean_squared_error(y_test, y_test_pred)
-        rmse_test = math.sqrt(mse_test)
-        mae_test_local = mean_absolute_error(y_test, y_test_pred)
+        train_perf = get_metrics(y_train, y_train_pred)
+        test_perf = get_metrics(y_test, y_test_pred)
 
         output_dict = {
             "w_owner": w_owner.tolist(),
             "intercept_owner": float(intercept_owner),
             "n_train_samples_owner": len(U_train),
             "n_test_samples_owner": len(U_test),
-            "rmse_train_owner": rmse_train,
-            "rmse_test_owner": rmse_test,
-            "mae_train_owner": float(mae_train_local),
-            "mae_test_owner": float(mae_test_local),
+            "rmse_train_owner": float(train_perf['rmse']),
+            "rmse_test_owner": float(test_perf['rmse']),
+            "mae_train_owner": float(train_perf['mae']),
+            "mae_test_owner": float(test_perf['mae']),
             "phase": "local_1"
         }
     else:
