@@ -1,19 +1,21 @@
 import os
-import h5py
+from random import shuffle
 
+import h5py
 import numpy as np
 import pandas as pd
-
-from random import shuffle
 from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit, train_test_split
 
 COL_NAME_SUBJECT_ID = "eid"
 COL_NAME_AGE = "age_when_attended_assessment_centre_f21003_2_0"
 
+
 def get_eid_age_from_file(file_dir, file_name):
     df = pd.read_table(os.path.join(file_dir, file_name))
     df_eid_age = df[[COL_NAME_SUBJECT_ID, COL_NAME_AGE]]
-    #Need to perform inner join with eid of this df with filename of fN variable in mat file
+    """
+    Note: Need to perform inner join with eid of this df with filenames in fN variable in mat file
+    """
 
     return df_eid_age
 
@@ -46,8 +48,6 @@ def read_fnc(file_dir, file_name):
 
 
     with h5py.File(os.path.join(file_dir, file_name), 'r') as f:
-        #for k, v in f.items():
-        #    mat_file_dict[k] = np.array(v)
         fN_data=get_cell_array_data('fN')[0]
         icn_ins_data=get_numpy_array('icn_ins')
         fnc_data=get_numpy_array('corrdata')
@@ -55,38 +55,49 @@ def read_fnc(file_dir, file_name):
     return fN_data, fnc_data, icn_ins_data
 
 
-def generate_XYMatrices(input_dir, data_file, label_file):
-    fN_data, fnc_data, icn_ins_data = read_fnc(input_dir, data_file)
+def generate_XYMatrices(input_dir, data_file, label_file, extract_icn_features_only=True):
+    fN_data, fnc_orig_data, icn_ins_data = read_fnc(input_dir, data_file)
     df_eid = get_eid_from_fN(fN_data)
 
     df_eid_age = get_eid_age_from_file(input_dir, label_file)
 
     df_result_eid = pd.concat([df_eid_age, df_eid], axis=1, join="inner").reindex(df_eid.index)
     y = df_result_eid[[COL_NAME_AGE]].to_numpy()
-    #y=y.reshape((y.shape[0]))
 
-    #X = fnc_data.reshape((fnc_data.shape[0],-1))
-    # Extract only upper triangular data
-    upper_tri_indx=np.triu_indices(fnc_data.shape[1], k = 1)
-    X=np.empty((len(fnc_data), len(upper_tri_indx[0])))
+    fnc_data = fnc_orig_data
+
+    """
+    Extract only the FNC matrix corresponding to icn_ins_indexes
+    """
+    if extract_icn_features_only:
+        icn_ins_data = icn_ins_data.astype(int).reshape((len(icn_ins_data)))
+        icn_ins_data = icn_ins_data - 1  # Note: Matlab indices starts from 1 where as python starts from 0.
+        fnc_data = fnc_data[:][:, icn_ins_data][:, :, icn_ins_data]
+
+    """
+    Extract only upper triangular data(non-diagonal) as FNC matrix is symmetric
+    """
+    upper_tri_indx = np.triu_indices(fnc_data.shape[1], k=1)
+    X = np.empty((len(fnc_data), len(upper_tri_indx[0])))
     for i in range(len(fnc_data)):
         X[i] = fnc_data[i][upper_tri_indx]
 
     return (X, y, fN_data)
 
 
-
 def get_age_range_stratified_splits(k, X, y, shuffle_data, test_size, num_bins=8):
-    k_splits=[]
-    # Divide ages into equal size bins and label them
-    y_age_range=pd.qcut(y.reshape(y.shape[0]), num_bins, labels=False)
+    k_splits = []
+    """
+    Divide ages into equal size bins and label them
+    """
+    y_age_range = pd.qcut(y.reshape(y.shape[0]), num_bins, labels=False)
 
     kfold = StratifiedKFold(n_splits=k, shuffle=shuffle_data, random_state=42)
     for tr_indx, tt_indx in kfold.split(X, y_age_range):
         shufflesplit = StratifiedShuffleSplit(n_splits=1, random_state=42, test_size=test_size)
-        indx_split=list(shufflesplit.split(X[tt_indx], y_age_range[tt_indx]))[0]
-        train_index= tt_indx[indx_split[0]]
-        test_index= tt_indx[indx_split[1]]
+        indx_split = list(shufflesplit.split(X[tt_indx], y_age_range[tt_indx]))[0]
+        train_index = tt_indx[indx_split[0]]
+        test_index = tt_indx[indx_split[1]]
 
         k_splits.append([train_index, test_index])
 
@@ -129,10 +140,8 @@ def generate_k_splits(X, y, fN_data, save_to_dir, k=6, shuffle_data=True, type="
 
     assert len(X) == len(y) == len(fN_data)
 
-    #concatenate
     combined_xy= np.concatenate((X, y),axis = 1)
     fN_data_arr = np.array(fN_data)
-
 
     if type== "random":
         k_splits = get_random_splits(k, X, y, shuffle_data, test_size)
@@ -156,30 +165,6 @@ def generate_k_splits(X, y, fN_data, save_to_dir, k=6, shuffle_data=True, type="
         np.savetxt(local_dir + os.sep + f"local{i}_subject_ref_filename_test.csv", fN_data_arr[test_index],  fmt='%s', delimiter=",")
 
 
-
-
-def generate_k_random_splits(X, y, fN_data, save_to_dir, k=6, shuffle_data=True):
-
-    assert len(X) == len(y) == len(fN_data)
-
-    #concatenate
-    combined_xy= np.concatenate((X, y),axis = 1)
-    fN_data_arr = np.array(fN_data)
-    indx_arr=np.arange(len(X))
-
-    if shuffle_data:
-        shuffle(indx_arr)
-
-    indx_splits = np.array_split(indx_arr, k)
-    for i in range(len(indx_splits)):
-        split_xy= combined_xy[indx_splits[i]]
-        split_fN= fN_data_arr[indx_splits[i]]
-
-        local_dir=save_to_dir + os.sep + f"local{i}" + os.sep + "simulatorRun"
-        os.makedirs(local_dir, exist_ok=True)
-        np.savetxt(local_dir + os.sep + f"local{i}_fnc_age.csv", split_xy, delimiter=",")
-        np.savetxt(local_dir + os.sep + f"local{i}_subject_ref_filename.csv", split_fN,  fmt='%s', delimiter=",")
-
 def generate_on_server():
     dir_name=""
     age_dir="/data/mialab/competition2019/UKBiobank/packNship/results/scores/new/"
@@ -194,15 +179,16 @@ def generate_on_server():
     #aggregated_SVR(X, y)
 
 def generate_on_desktop():
-    dir_name= "/Users/sbasodi1/workplace/brain_age_pipeline/fnc/UKBioBank_Comp2019/FNC3/results/non-mc/"
+    dir_name = "/Users/sbasodi1/workplace/brain_age_pipeline/fnc/UKBioBank_Comp2019/FNC3/results/non-mc/"
 
-    age_file_name="ukb_unaffected_clean_select_log_with_sex.tab"
+    age_file_name = "ukb_unaffected_clean_select_log_with_sex.tab"
 
-    fnc_file_name="data_staticFC_11754.mat"
+    fnc_file_name = "data_staticFC_11754.mat"
 
-    [X, y, fN_data]= generate_XYMatrices(dir_name, data_file=fnc_file_name, label_file=age_file_name)
-    generate_k_splits(X, y, fN_data, save_to_dir="../test/input", k=6, shuffle_data=True, type="age_range_stratified", test_size=0.1)
-    #aggregated_SVR(X, y)
+    [X, y, fN_data] = generate_XYMatrices(dir_name, data_file=fnc_file_name, label_file=age_file_name)
+    generate_k_splits(X, y, fN_data, save_to_dir="../test/input", k=6, shuffle_data=True,
+                      type="age_range_stratified", test_size=0.1)
+    # aggregated_SVR(X, y)
 
 def test_functions():
     X = np.array([[1, 2], [3, 4], [1, 2], [3, 4], [1, 2], [3, 4], [1, 2], [3, 4], [1, 2], [3, 4], [1, 2], [3, 4],
@@ -218,4 +204,3 @@ if __name__ == "__main__":
     #generate_on_server()
     generate_on_desktop()
     #test_functions()
-

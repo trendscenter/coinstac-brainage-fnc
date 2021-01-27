@@ -11,6 +11,9 @@ import sys
 import numpy as np
 from common_functions import list_recursive
 
+OUTPUT_KEY_LIST = ['w_local', 'intercept_local', 'n_train_samples_local', 'n_test_samples_local',
+                   'rmse_train_local', 'rmse_test_local', 'mae_train_local', 'mae_test_local']
+
 """
 ============================================================================
 The below function does the following tasks
@@ -45,86 +48,38 @@ And gives the following output:
 """
 
 
+def aggregate_locals(input_list, key_list):
+    aggegated_dict = {}
+    for key_name in key_list:
+        aggegated_dict[key_name] = np.array(
+            [
+                site_dict[key_name]
+                for site, site_dict in input_list.items()
+                if key_name in site_dict
+            ]
+        )
+
+    return aggegated_dict
+
+
 def remote_0(args):
     input_list = args["input"]
-    # aggregate from local sites
-    w_locals = np.array(
-        [
-            site_dict["w_local"]
-            for site, site_dict in input_list.items()
-            if "w_local" in site_dict
-        ]
-    ).T
-
-    intercept_locals = np.array(
-        [
-            site_dict["intercept_local"]
-            for site, site_dict in input_list.items()
-            if "intercept_local" in site_dict
-        ]
-    )
-
-    rmse_train_locals = np.array(
-        [
-            site_dict["rmse_train_local"]
-            for site, site_dict in input_list.items()
-            if "rmse_train_local" in site_dict
-        ]
-    )
-
-    rmse_test_locals = np.array(
-        [
-            site_dict["rmse_test_local"]
-            for site, site_dict in input_list.items()
-            if "rmse_test_local" in site_dict
-        ]
-    )
-    mae_train_locals = np.array(
-        [
-            site_dict["mae_train_local"]
-            for site, site_dict in input_list.items()
-            if "mae_train_local" in site_dict
-        ]
-    )
-
-    mae_test_locals = np.array(
-        [
-            site_dict["mae_test_local"]
-            for site, site_dict in input_list.items()
-            if "mae_test_local" in site_dict
-        ]
-    )
-
-    n_train_samples_locals = np.array(
-        [
-            site_dict["n_train_samples_local"]
-            for site, site_dict in input_list.items()
-            if "n_train_samples_local" in site_dict
-        ]
-    )
-
-    n_test_samples_locals = np.array(
-        [
-            site_dict["n_test_samples_local"]
-            for site, site_dict in input_list.items()
-            if "n_test_samples_local" in site_dict
-        ]
-    )
+    aggegated_dict = aggregate_locals(input_list, OUTPUT_KEY_LIST)
 
     # dicts
     output_dict = {
-        "w_locals": w_locals.tolist(),
+        "w_locals": aggegated_dict["w_local"].T.tolist(),
         "phase": "remote_0"
     }
 
     cache_dict = output_dict.copy()
-    cache_dict["intercept_locals"] = intercept_locals.tolist()
-    cache_dict["rmse_train_locals"] = rmse_train_locals.tolist()
-    cache_dict["rmse_test_locals"] = rmse_test_locals.tolist()
-    cache_dict["mae_train_locals"] = mae_train_locals.tolist()
-    cache_dict["mae_test_locals"] = mae_test_locals.tolist()
-    cache_dict["n_train_samples_locals"] = n_train_samples_locals.tolist()
-    cache_dict["n_test_samples_locals"] = n_test_samples_locals.tolist()
+    cache_dict["intercept_locals"] = aggegated_dict["intercept_local"].tolist()
+    cache_dict["rmse_train_locals"] = aggegated_dict["rmse_train_local"].tolist()
+    cache_dict["rmse_test_locals"] = aggegated_dict["rmse_test_local"].tolist()
+    cache_dict["mae_train_locals"] = aggegated_dict["mae_train_local"].tolist()
+    cache_dict["mae_test_locals"] = aggegated_dict["mae_test_local"].tolist()
+    cache_dict["n_train_samples_locals"] = aggegated_dict["n_train_samples_local"].tolist()
+    cache_dict["n_test_samples_locals"] = aggegated_dict["n_test_samples_local"].tolist()
 
     result_dict = {"output": output_dict, "cache": cache_dict}
 
@@ -150,7 +105,7 @@ This function takes in following inputs in args['input'] and args['cache']
     n_samples_test_owner: number of samples of test data (owner)
     computation_phase : local_1
 - cache:
-    wlocals : aggregate weight coefficients of local sites
+    w_locals : aggregate weight coefficients of local sites
     intercept_locals: aggregate intercept of local sites
     rmse_train_locals: aggregate root mean square error
     rmse_test_locals: aggregate root mean square error of test data
