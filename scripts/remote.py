@@ -9,7 +9,7 @@ import json
 import sys
 
 import numpy as np
-from common_functions import list_recursive
+from core.common_functions import list_recursive
 
 OUTPUT_KEY_LIST = ['w_local', 'intercept_local', 'n_train_samples_local', 'n_test_samples_local',
                    'rmse_train_local', 'rmse_test_local', 'mae_train_local', 'mae_test_local']
@@ -46,8 +46,6 @@ And gives the following output:
     n_test_samples_locals: number of test samples
 ============================================================================
 """
-
-
 def aggregate_locals(input_list, key_list):
     aggegated_dict = {}
     for key_name in key_list:
@@ -130,8 +128,6 @@ And gives the following output:
     n_samples_locals: aggregate number of samples
 ============================================================================
 """
-
-
 def remote_1(args):
     input_list = args["input"]
     state_list = args["state"]

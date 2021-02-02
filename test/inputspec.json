@@ -1,12 +1,18 @@
 [
   {
-    "data": {
+    "data_repo": {
       "value": {
-        "train_csv_file": "local0_fnc_age_train.csv",
-        "test_csv_file": "local0_fnc_age_test.csv"
+        "csv_file": "local0_fnc_age.csv"
       }
     },
-    "split_type": { "value": "age_range_stratified"},
+    "data": {
+      "value" : {
+        "gica_file": "coinstac-gica_postprocess_results.mat",
+        "label_file": "covariates.csv"
+      }
+    },
+    "input_source": { "value": "GICA"},
+    "split_type": { "value": "random"},
     "epsilon_local": { "value": 0.0},
     "fit_intercept_local": { "value": true},
     "intercept_scaling_local": { "value": 1.0},
@@ -29,13 +35,19 @@
     "shuffle": {"value": true}
   },
   {
-    "data": {
+    "data_repo": {
       "value": {
-        "train_csv_file": "local1_fnc_age_train.csv",
-        "test_csv_file": "local1_fnc_age_test.csv"
+        "csv_file": "local1_fnc_age.csv"
       }
     },
-    "split_type": { "value": "age_range_stratified"},
+    "data": {
+      "value" : {
+        "gica_file": "coinstac-gica_postprocess_results.mat",
+        "label_file": "covariates.csv"
+      }
+    },
+    "input_source": { "value": "GICA"},
+    "split_type": { "value": "random"},
     "epsilon_local": { "value": 0.0},
     "fit_intercept_local": { "value": true},
     "intercept_scaling_local": { "value": 1.0},
@@ -58,13 +70,19 @@
     "shuffle": {"value": true}
   },
   {
-    "data": {
+    "data_repo": {
       "value": {
-        "train_csv_file": "local2_fnc_age_train.csv",
-        "test_csv_file": "local2_fnc_age_test.csv"
+        "csv_file": "local2_fnc_age.csv"
       }
     },
-    "split_type": { "value": "age_range_stratified"},
+    "data": {
+      "value" : {
+        "gica_file": "coinstac-gica_postprocess_results.mat",
+        "label_file": "covariates.csv"
+      }
+    },
+    "input_source": { "value": "GICA"},
+    "split_type": { "value": "random"},
     "epsilon_local": { "value": 0.0},
     "fit_intercept_local": { "value": true},
     "intercept_scaling_local": { "value": 1.0},
@@ -87,13 +105,19 @@
     "shuffle": {"value": true}
   },
   {
-    "data": {
+    "data_repo": {
       "value": {
-        "train_csv_file": "local3_fnc_age_train.csv",
-        "test_csv_file": "local3_fnc_age_test.csv"
+        "csv_file": "local3_fnc_age.csv"
       }
     },
-    "split_type": { "value": "age_range_stratified"},
+    "data": {
+      "value" : {
+        "gica_file": "coinstac-gica_postprocess_results.mat",
+        "label_file": "covariates.csv"
+      }
+    },
+    "input_source": { "value": "GICA"},
+    "split_type": { "value": "random"},
     "epsilon_local": { "value": 0.0},
     "fit_intercept_local": { "value": true},
     "intercept_scaling_local": { "value": 1.0},
@@ -116,13 +140,19 @@
     "shuffle": {"value": true}
   },
   {
-    "data": {
+    "data_repo": {
       "value": {
-        "train_csv_file": "local4_fnc_age_train.csv",
-        "test_csv_file": "local4_fnc_age_test.csv"
+        "csv_file": "local4_fnc_age.csv"
       }
     },
-    "split_type": { "value": "age_range_stratified"},
+    "data": {
+      "value" : {
+        "gica_file": "coinstac-gica_postprocess_results.mat",
+        "label_file": "covariates.csv"
+      }
+    },
+    "input_source": { "value": "GICA"},
+    "split_type": { "value": "random"},
     "epsilon_local": { "value": 0.0},
     "fit_intercept_local": { "value": true},
     "intercept_scaling_local": { "value": 1.0},
@@ -145,13 +175,19 @@
     "shuffle": {"value": true}
   },
   {
-    "data": {
+    "data_repo": {
       "value": {
-        "train_csv_file": "local5_fnc_age_train.csv",
-        "test_csv_file": "local5_fnc_age_test.csv"
+        "csv_file": "local5_fnc_age.csv"
       }
     },
-    "split_type": { "value": "age_range_stratified"},
+    "data": {
+      "value" : {
+        "gica_file": "coinstac-gica_postprocess_results.mat",
+        "label_file": "covariates.csv"
+      }
+    },
+    "input_source": { "value": "GICA"},
+    "split_type": { "value": "random"},
     "epsilon_local": { "value": 0.0},
     "fit_intercept_local": { "value": true},
     "intercept_scaling_local": { "value": 1.0},

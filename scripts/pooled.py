@@ -1,14 +1,16 @@
+"""
+This script aggregates data from all the local sites and performs regression on the combined data.
+"""
+
 import json
 
 import numpy as np
 from sklearn import preprocessing
 from sklearn.pipeline import make_pipeline
 from sklearn.svm import LinearSVR
-from svr_utils import *
+from core import preprocessor_utils as preut
+from core import svr_utils as svrut
 
-"""
-This code aggregates data from all the local sites and performs regression on the combined data.
-"""
 
 """
 Performs LinearSVR on the passed data.
@@ -21,7 +23,6 @@ def aggregated_SVR(X_train, X_test, y_train, y_test):
             input_list = conf
             break
 
-    # X = X.astype(np.double)
     regr = make_pipeline(preprocessing.MinMaxScaler(),
                          LinearSVR
                          (epsilon=input_list["epsilon_local"]["value"],
@@ -42,10 +43,10 @@ def aggregated_SVR(X_train, X_test, y_train, y_test):
     intercept_aggr = svr2.intercept_
 
     y_train_pred = regr.predict(X_train)
-    train_pref = get_metrics(y_train, y_train_pred)
+    train_pref = svrut.get_metrics(y_train, y_train_pred)
 
     y_test_pred = regr.predict(X_test)
-    test_pref = get_metrics(y_test, y_test_pred)
+    test_pref = svrut.get_metrics(y_test, y_test_pred)
 
     output_dict = {
         # "intercept_aggregated": intercept_combined.tolist(),
@@ -70,12 +71,15 @@ Combines data from all the local sites.
 def combine_all_local_data():
     X_train, y_train, X_test, y_test = None, None, None, None
     for indx, conf in enumerate(json.loads(open('../test/inputspec.json').read())):
-        [local_X_train, local_y_train] = form_XYMatrices(
-            input_dir=f"../test/input/local{indx}/simulatorRun/{conf['split_type']['value']}/",
-            input_file=conf['data']['value']['train_csv_file'])
-        [local_X_test, local_y_test] = form_XYMatrices(
-            input_dir=f"../test/input/local{indx}/simulatorRun/{conf['split_type']['value']}/",
-            input_file=conf['data']['value']['test_csv_file'])
+        input_dir = f"../test/input/local{indx}/simulatorRun/"
+        data_file = conf['data']['value']['gica_file']
+        label_file = conf['data']['value']['label_file']
+        input_source = conf['input_source']['value']
+        [X, y] = svrut.form_XYMatrices(input_dir, input_source, data_file, label_file)
+        local_X_train, local_X_test, local_y_train, local_y_test = preut.split_xy_data(
+            conf['split_type']['value'], X, y, conf['test_size']['value'],
+            conf['shuffle']['value'])
+
         if X_train is None:
             X_train = local_X_train
             y_train = local_y_train
@@ -92,12 +96,14 @@ def combine_all_local_data():
 
 def get_local_site_data(local_site_num):
     conf = json.loads(open('../test/inputspec.json').read())[local_site_num]
-    [local_X_train, local_y_train] = form_XYMatrices(
-        input_dir=f"../test/input/local{local_site_num}/simulatorRun/{conf['split_type']['value']}/",
-        input_file=conf['data']['value']['train_csv_file'])
-    [local_X_test, local_y_test] = form_XYMatrices(
-        input_dir=f"../test/input/local{local_site_num}/simulatorRun/{conf['split_type']['value']}/",
-        input_file=conf['data']['value']['test_csv_file'])
+    input_dir = f"../test/input/local{local_site_num}/simulatorRun/"
+    data_file = conf['data']['value']['gica_file']
+    label_file = conf['data']['value']['label_file']
+    input_source = conf['input_source']['value']
+    [X, y] = svrut.form_XYMatrices(input_dir, input_source, data_file, label_file)
+    local_X_train, local_X_test, local_y_train, local_y_test = preut.split_xy_data(
+        conf['split_type']['value'], X, y, conf['test_size']['value'],
+        conf['shuffle']['value'])
 
     return local_X_train, local_X_test, local_y_train, local_y_test
 
@@ -110,13 +116,10 @@ def perform_pca(X_train, X_test):
     from sklearn.decomposition import PCA
 
     scaler = StandardScaler()
-    # Fit on training set only.
     scaler.fit(X_train)
-    # Apply transform to both the training set and the test set.
     X_train_pca = scaler.transform(X_train)
     X_test_pca = scaler.transform(X_test)
 
-    # Make an instance of the Model
     pca = PCA(.95)
     pca.fit(X_train_pca)
     X_train_pca = pca.transform(X_train_pca)
@@ -142,12 +145,11 @@ def build_aggregated_model(pca=False):
     local0_X_train, local0_X_test, local0_y_train, local0_y_test = get_local_site_data(0)
     local0_y_train_pred = model.predict(local0_X_train)
     local0_y_test_pred = model.predict(local0_X_test)
-    train_pref = get_metrics(local0_y_train, local0_y_train_pred)
-    test_pref = get_metrics(local0_y_test, local0_y_test_pred)
+    train_pref = svrut.get_metrics(local0_y_train, local0_y_train_pred)
+    test_pref = svrut.get_metrics(local0_y_test, local0_y_test_pred)
     print("Model performance only on local0 train and test data:")
     print("Train data: ", train_pref)
     print("Test data: ", test_pref)
-
 
 if __name__ == "__main__":
     build_aggregated_model(pca=False)

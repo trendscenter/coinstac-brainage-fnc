@@ -10,11 +10,12 @@ import os
 import sys
 
 import numpy as np
-from common_functions import list_recursive
+from core import preprocessor_utils as preut
+from core import svr_utils as svrut
+from core.common_functions import list_recursive
 from sklearn import preprocessing
 from sklearn.pipeline import make_pipeline
 from sklearn.svm import LinearSVR
-from svr_utils import *
 
 """
 ============================================================================
@@ -57,11 +58,13 @@ def local_0(args):
 
     owner = state_list["owner"] if "owner" in state_list else "local0"
 
-    train_data_file = input_list['data']['train_csv_file']
-    test_data_file = input_list['data']['test_csv_file']
+    data_file = input_list['data']['gica_file']
+    label_file = input_list['data']['label_file']
+    input_source = input_list['input_source']
 
-    [X_train, y_train] = form_XYMatrices(input_dir + os.sep + input_list['split_type'], train_data_file)
-    [X_test, y_test] = form_XYMatrices(input_dir + os.sep + input_list['split_type'], test_data_file)
+    [X, y] = svrut.form_XYMatrices(input_dir, input_source, data_file, label_file)
+    X_train, X_test, y_train, y_test = preut.split_xy_data(input_list['split_type'], X, y, input_list["test_size"],
+                                                           input_list["shuffle"])
 
     if state_list["clientId"] == owner:
         np.save(os.path.join(cache_dir, "X_train.npy"), X_train)
@@ -109,10 +112,10 @@ def local_0(args):
         intercept_local = svr2.intercept_
 
         y_train_pred = regr.predict(X_train)
-        train_perf = get_metrics(y_train, y_train_pred)
+        train_perf = svrut.get_metrics(y_train, y_train_pred)
 
         y_test_pred = regr.predict(X_test)
-        test_perf = get_metrics(y_test, y_test_pred)
+        test_perf = svrut.get_metrics(y_test, y_test_pred)
 
         cache_dict = {}
         output_dict = {
@@ -220,8 +223,8 @@ def local_1(args):
         y_train_pred = regr.predict(U_train)
         y_test_pred = regr.predict(U_test)
 
-        train_perf = get_metrics(y_train, y_train_pred)
-        test_perf = get_metrics(y_test, y_test_pred)
+        train_perf = svrut.get_metrics(y_train, y_train_pred)
+        test_perf = svrut.get_metrics(y_test, y_test_pred)
 
         output_dict = {
             "w_owner": w_owner.tolist(),
