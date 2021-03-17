@@ -1,21 +1,21 @@
 {
   "meta": {
     "name": "Brainage prediction using Support Vector Regression Demo",
-    "id": "dpsvr_fnc",
+    "id": "brainage_svr_fnc",
     "version": "v1.0.0",
     "repository": "https:\/\/github.com\/trendscenter\/coinstac-brainage-fnc",
     "description": "Brain Age Prediction using Linear SVR model and FNC matrices as features\n\n"
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "dpsvr_fnc",
+    "dockerImage": "brainage_svr_fnc",
     "command": [
       "python",
       "\/computation\/scripts\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "dpsvr_fnc",
+      "dockerImage": "brainage_svr_fnc",
       "command": [
         "python",
         "\/computation\/scripts\/remote.py"

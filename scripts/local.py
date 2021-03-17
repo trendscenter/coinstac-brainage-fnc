@@ -12,7 +12,7 @@ import sys
 import numpy as np
 from core import preprocessor_utils as preut
 from core import svr_utils as svrut
-from core.common_functions import list_recursive
+from core import common_functions as cf
 from sklearn import preprocessing
 from sklearn.pipeline import make_pipeline
 from sklearn.svm import LinearSVR
@@ -92,6 +92,9 @@ def local_0(args):
         output_dict = {"phase": "local_0"}
 
     else:
+        # Merge both train and test so that all the data can be used for training in non-owner nodes.
+        X = np.vstack((X_train, X_test))
+        y = np.hstack((y_train, y_test))
         regr = make_pipeline(preprocessing.MinMaxScaler(),
                              LinearSVR
                              (epsilon=input_list["epsilon_local"],
@@ -104,7 +107,7 @@ def local_0(args):
                               random_state=input_list["random_state_local"],
                               max_iter=input_list["max_iterations_local"]))
 
-        regr.fit(X_train, y_train)
+        regr.fit(X, y)
         params = regr.get_params()
         svr2 = params['linearsvr']
         w = svr2.coef_
@@ -168,14 +171,6 @@ And gives the following output:
     computation_phase : local_1
 ============================================================================
 """
-def load_data(dir_name, file_name):
-    file_with_path = os.path.join(dir_name, file_name)
-
-    with open(file_with_path, "rb") as fp:
-        data = np.load(fp)
-    return data.astype(np.double)
-
-
 def local_1(args):
     state_list = args["state"]
     owner = state_list["owner"] if "owner" in state_list else "local0"
@@ -185,10 +180,10 @@ def local_1(args):
         cache_list = args["cache"]
         cache_dir = state_list["cacheDirectory"]
 
-        X_train = load_data(cache_dir, cache_list.get("X_train_filename", ""))
-        y_train = load_data(cache_dir, cache_list.get("y_train_filename", ""))
-        X_test = load_data(cache_dir, cache_list.get("X_test_filename", ""))
-        y_test = load_data(cache_dir, cache_list.get("y_test_filename", ""))
+        X_train = preut.load_npy_data(cache_dir, cache_list.get("X_train_filename", ""))
+        y_train = preut.load_npy_data(cache_dir, cache_list.get("y_train_filename", ""))
+        X_test = preut.load_npy_data(cache_dir, cache_list.get("X_test_filename", ""))
+        y_test = preut.load_npy_data(cache_dir, cache_list.get("y_test_filename", ""))
 
         w_locals = np.array(input_list["w_locals"])
         w_locals = w_locals.astype(np.double)
@@ -246,7 +241,7 @@ def local_1(args):
 
 if __name__ == "__main__":
     parsed_args = json.loads(sys.stdin.read())
-    phase_key = list(list_recursive(parsed_args, "phase"))
+    phase_key = list(cf.list_recursive(parsed_args, "phase"))
     if not phase_key:
         result_dict = local_0(parsed_args)
         sys.stdout.write(result_dict)

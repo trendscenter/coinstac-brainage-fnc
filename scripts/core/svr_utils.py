@@ -6,10 +6,14 @@ import os
 import h5py
 import numpy as np
 import pandas as pd
-from core import preprocessor_utils as preut
+
 from scipy.io import loadmat
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 
+try:
+    from scripts.core import preprocessor_utils as preut
+except:
+    import preprocessor_utils as preut
 
 def read_fnc_gica(file_dir, file_name):
     data = loadmat(os.path.join(file_dir, file_name))['fnc_corrs_all']
