@@ -19,7 +19,8 @@ def aggregated_SVR(X_train, X_test, y_train, y_test):
     input_list = None
     for indx, conf in enumerate(json.loads(open('../test/inputspec.json').read())):
         if input_list is None:
-            conf.pop("data")
+            conf.pop("site_data")
+            conf.pop("site_label")
             input_list = conf
             break
 
@@ -72,8 +73,8 @@ def combine_all_local_data():
     X_train, y_train, X_test, y_test = None, None, None, None
     for indx, conf in enumerate(json.loads(open('../test/inputspec.json').read())):
         input_dir = f"../test/input/local{indx}/simulatorRun/"
-        data_file = conf['data']['value']['gica_file']
-        label_file = conf['data']['value']['label_file']
+        data_file = conf['site_data']['value'][0]
+        label_file = conf['site_label']['value'][0]
         input_source = conf['input_source']['value']
         [X, y] = svrut.form_XYMatrices(input_dir, input_source, data_file, label_file)
         local_X_train, local_X_test, local_y_train, local_y_test = preut.split_xy_data(
@@ -97,8 +98,8 @@ def combine_all_local_data():
 def get_local_site_data(local_site_num):
     conf = json.loads(open('../test/inputspec.json').read())[local_site_num]
     input_dir = f"../test/input/local{local_site_num}/simulatorRun/"
-    data_file = conf['data']['value']['gica_file']
-    label_file = conf['data']['value']['label_file']
+    data_file = conf['site_data']['value'][0]
+    label_file = conf['site_label']['value'][0]
     input_source = conf['input_source']['value']
     [X, y] = svrut.form_XYMatrices(input_dir, input_source, data_file, label_file)
     local_X_train, local_X_test, local_y_train, local_y_test = preut.split_xy_data(
