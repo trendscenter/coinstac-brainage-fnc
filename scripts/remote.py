@@ -9,7 +9,7 @@ import json
 import sys
 
 import numpy as np
-from core.common_functions import list_recursive
+from core import common_functions as cf
 
 OUTPUT_KEY_LIST = ['w_local', 'intercept_local', 'n_train_samples_local', 'n_test_samples_local',
                    'rmse_train_local', 'rmse_test_local', 'mae_train_local', 'mae_test_local']
@@ -149,12 +149,10 @@ def remote_1(args):
         "rmse_test_locals": [dict_locals.get("rmse_test_locals"), "tables"],
         "mae_train_locals": [dict_locals.get("mae_train_locals"), "tables"],
         "mae_test_locals": [dict_locals.get("mae_test_locals"), "tables"],
-        "n_train_samples_owner": [
-            dict_owner.get("n_train_samples_owner"), "number"],
-        "n_test_samples_owner": [
-            dict_owner.get("n_test_samples_owner"), "number"],
-        "rmse_test_owner": [dict_owner.get("rmse_test_owner"), "table"],
+        "n_train_samples_owner": [dict_owner.get("n_train_samples_owner"), "number"],
+        "n_test_samples_owner": [dict_owner.get("n_test_samples_owner"), "number"],
         "rmse_train_owner": [dict_owner.get("rmse_train_owner"), "table"],
+        "rmse_test_owner": [dict_owner.get("rmse_test_owner"), "table"],
         "mae_train_owner": [dict_owner.get("mae_train_owner"), "table"],
         "mae_test_owner": [dict_owner.get("mae_test_owner"), "table"],
 
@@ -166,7 +164,7 @@ def remote_1(args):
 
 if __name__ == "__main__":
     parsed_args = json.loads(sys.stdin.read())
-    phase_key = list(list_recursive(parsed_args, "phase"))
+    phase_key = list(cf.list_recursive(parsed_args, "phase"))
 
     if "local_0" in phase_key:
         result_dict = remote_0(parsed_args)

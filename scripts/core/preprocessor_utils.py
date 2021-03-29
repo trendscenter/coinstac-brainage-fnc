@@ -6,6 +6,14 @@ import pandas as pd
 from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit, train_test_split
 
 
+def load_npy_data(dir_name, file_name):
+    file_with_path = os.path.join(dir_name, file_name)
+
+    with open(file_with_path, "rb") as fp:
+        data = np.load(fp)
+    return data.astype(np.double)
+
+
 def get_cell_array_data(hdf5_file, key_name):
     data = []
     for column in hdf5_file[key_name]:
