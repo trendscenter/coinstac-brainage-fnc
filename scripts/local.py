@@ -27,7 +27,7 @@ The below function does the following tasks
 ----------------------------------------------------------------------------
 This function takes in the following inputs in args['input']:
 ----------------------------------------------------------------------------
-- input_file : csv file containing GM ROI features and brain ages, 
+- input_file : csv file containing GM ROI features and brain ages,
 each row for an observation
 - arguments for sklearn linear SVR for both owner and local sites
 ----------------------------------------------------------------------------
@@ -58,8 +58,9 @@ def local_0(args):
 
     owner = state_list["owner"] if "owner" in state_list else "local0"
 
-    data_file = input_list['data']['gica_file']
-    label_file = input_list['data']['label_file']
+    data_file = os.path.join(input_dir, input_list['site_data'][0])
+    label_file = os.path.join(input_dir, input_list['site_label'][0])
+
     input_source = input_list['input_source']
 
     [X, y] = svrut.form_XYMatrices(input_dir, input_source, data_file, label_file)
@@ -138,8 +139,8 @@ def local_0(args):
 ============================================================================
 The below function does the following tasks
 1. read the X,Y matrices for owner site
-2. For owner site, 
-    a. modify X and Y with weighted values using the mean weight coefficients 
+2. For owner site,
+    a. modify X and Y with weighted values using the mean weight coefficients
     obtained from local sites
     b. perform linear SVR regression to find weight coefficients
     and RMSE, MAE of training and test data

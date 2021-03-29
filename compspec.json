@@ -1,51 +1,52 @@
 {
   "meta": {
     "name": "Brainage prediction using Support Vector Regression Demo",
-    "id": "dpsvr_fnc",
+    "id": "dpsvr-fnc",
     "version": "v1.0.0",
     "repository": "https:\/\/github.com\/trendscenter\/coinstac-brainage-fnc",
     "description": "Brain Age Prediction using Linear SVR model and FNC matrices as features\n\n"
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "dpsvr_fnc",
+    "dockerImage": "dpsvr-fnc",
     "command": [
       "python",
       "\/computation\/scripts\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "dpsvr_fnc",
+      "dockerImage": "dpsvr-fnc",
       "command": [
         "python",
         "\/computation\/scripts\/remote.py"
       ]
     },
     "input": {
-      "covariates":   
+      "covariates":
       {
         "label": "Covariates",
-        "description": "Demographic or medical features (e.g., isControl, sex, age)",    
+        "description": "Demographic or medical features (e.g., isControl, sex, age)",
         "type": "array",
         "items": ["boolean", "number"],
-        "order": 1
-      },    
-      "data": 
-      {
-        "label": "Measurements",
-        "description": "Files containing brain region measurements (e.g., FreeSurfer files)", 
-        "items": ["FreeSurfer"],
-        "extensions": [["csv", "txt"]],
         "order": 0
       },
-      "label":   
+      "data":
       {
-        "label": "Label", 
-        "description": "The binary label to predict",  
+        "label": "Measurements",
+        "description": "Files containing brain region measurements (e.g., FreeSurfer files)",
+        "type": "files",
+        "items": ["site_data", "site_label"],
+        "extensions": [["csv", "mat"]],
+        "order": 1
+      },
+      "label":
+      {
+        "label": "Label",
+        "description": "The binary label to predict",
         "type": "string",
         "source": "owner",
-        "order": 1
-      },    
+        "order": 2
+      },
       "model_local":
       {
         "default": "SVM",
@@ -53,17 +54,17 @@
         "description": "Binary classification model: SVM / LR",
         "type": "string",
         "source": "owner",
-        "order": 4
-      },   
+        "order": 3
+      },
       "is_private_local":
       {
         "default": true,
         "label": "Is_private_local",
         "description": "Private or public version of model",
         "type": "boolean",
-        "source": "owner", 
+        "source": "owner",
         "order": 4
-      },   
+      },
       "perturb_method_local":
       {
         "default": "objective",
@@ -71,19 +72,19 @@
         "description": "Perturbation method for conserving privacy: objective / output, not needed for public version",
         "type": "string",
         "source": "owner",
-        "order": 4
-      },         
+        "order": 5
+      },
       "lambda_local":
       {
         "default": 0.01,
         "label": "Lambda_local",
         "description": "Regularization parameter",
-        "max": 100, 
-        "min": 0, 
+        "max": 100,
+        "min": 0,
         "step": "logrithmic",
         "type": "range",
         "source": "owner",
-        "order": 2
+        "order": 6
       },
       "epsilon_local":
       {
@@ -92,10 +93,10 @@
         "description": "Privacy parameter",
         "max": 100.0,
         "min": 0.1,
-        "step": 0.01, 
+        "step": 0.01,
         "type": "range",
         "source": "owner",
-        "order": 3
+        "order": 7
       },
       "huberconst_local":
       {
@@ -107,7 +108,7 @@
         "step": 0.01,
         "type": "range",
         "source": "owner",
-        "order": 3
+        "order": 8
       },
       "fit_intercept_local":
       {
@@ -115,9 +116,9 @@
         "label": "Fit_intercept_local",
         "description": "Whether to calculate the intercept for the local model. If set to false, intercept = 0 (i.e., local training data is already centered).",
         "type": "boolean",
-        "source": "owner", 
-        "order": 4
-      },       
+        "source": "owner",
+        "order": 9
+      },
       "intercept_scaling_local":
       {
         "default": 1.0,
@@ -128,7 +129,7 @@
         "step": 0.01,
         "type": "range",
         "source": "owner",
-        "order": 3
+        "order": 10
       },
       "model_owner":
       {
@@ -137,17 +138,17 @@
         "description": "Binary classification model: SVM / LR",
         "type": "string",
         "source": "owner",
-        "order": 4
-      },   
+        "order": 11
+      },
       "is_private_owner":
       {
         "default": true,
         "label": "Is_private_owner",
         "description": "Private or public version of model",
         "type": "boolean",
-        "source": "owner", 
-        "order": 4
-      },   
+        "source": "owner",
+        "order": 12
+      },
       "perturb_method_owner":
       {
         "default": "objective",
@@ -155,19 +156,19 @@
         "description": "Perturbation method for conserving privacy: objective / output, not needed for public version",
         "type": "string",
         "source": "owner",
-        "order": 4
-      },         
+        "order": 13
+      },
       "lambda_owner":
       {
         "default": 0.01,
         "label": "Lambda_owner",
         "description": "Regularization parameter",
-        "max": 100, 
-        "min": 0, 
+        "max": 100,
+        "min": 0,
         "step": "logrithmic",
         "type": "range",
         "source": "owner",
-        "order": 2
+        "order": 14
       },
       "epsilon_owner":
       {
@@ -176,10 +177,10 @@
         "description": "Privacy parameter",
         "max": 100.0,
         "min": 0.1,
-        "step": 0.01, 
+        "step": 0.01,
         "type": "range",
         "source": "owner",
-        "order": 3
+        "order": 15
       },
       "huberconst_owner":
       {
@@ -191,7 +192,7 @@
         "step": 0.01,
         "type": "range",
         "source": "owner",
-        "order": 3
+        "order": 16
       },
       "fit_intercept_owner":
       {
@@ -199,9 +200,9 @@
         "label": "Fit_intercept_owner",
         "description": "Whether to calculate the intercept for the aggregator model. If set to false, intercept = 0 (i.e., soft predictions are expected to be already centered).",
         "type": "boolean",
-        "source": "owner", 
-        "order": 4
-      },       
+        "source": "owner",
+        "order": 17
+      },
       "intercept_scaling_owner":
       {
         "default": 1.0,
@@ -212,8 +213,8 @@
         "step": 0.01,
         "type": "range",
         "source": "owner",
-        "order": 3
-      },      
+        "order": 18
+      },
       "train_split":
       {
         "default": 0.8,
@@ -224,7 +225,7 @@
         "step": 0.1,
         "type": "number",
         "source": "owner",
-        "order": 4
+        "order": 19
       },
       "shuffle":
       {
@@ -232,14 +233,14 @@
         "label": "Shuffle",
         "description": "Whether shuffle or not when splitting train / test dataset",
         "type": "boolean",
-        "source": "owner", 
-        "order": 4
+        "source": "owner",
+        "order": 20
       }
     },
-    "output": {  
+    "output": {
       "regressions": {
         "label": "Regressions",
-        "type": "array",
+        "type": "table",
         "items": {
           "global_stats": {
             "label": "Global Stats",
@@ -300,7 +301,7 @@
         }
       }
     },
-    "display": [ 
+    "display": [
       {
         "type": "string",
         "tables": [
