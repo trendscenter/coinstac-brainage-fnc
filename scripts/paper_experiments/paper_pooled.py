@@ -11,6 +11,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.svm import LinearSVR
 
 from scripts.core import svr_utils as svrut
+from scripts.paper_experiments import paper_plots as pap_plt
 from scripts.paper_experiments import paper_utils as paput
 
 TEST_DIR = "../../test/"
@@ -218,7 +219,7 @@ def build_aggregated_model(test_site_num, split_type, split_num, pca=False, comb
     return output_dict
 
 
-def get_local_model(owner_node_num, split_type, split_num):
+def get_distributed_model(owner_node_num, split_type, split_num):
     local_output_dicts = []
     local_weights = []
 
@@ -265,20 +266,20 @@ def get_local_model(owner_node_num, split_type, split_num):
 
     owner_regr, owner_output_dict = aggregated_SVR(U_train, U_test, y_owner_train, y_all_test)
 
-    return owner_output_dict
+    return owner_output_dict, local_output_dicts
 
 
 def build_distributed_model(owner_node_num, split_type, split_num, pca, combine_all_local_tests=False):
     print(f"Running distributed SVR now. Owner node: local{str(owner_node_num)}, split_type:{split_type}, "
           f"split_num: {split_num}" )
 
-    owner_output_dict = get_local_model(owner_node_num, split_type, split_num)
+    owner_output_dict, local_output_dicts = get_distributed_model(owner_node_num, split_type, split_num)
     print(owner_output_dict)
 
     # paput.pp_metrics(output_dict, split_type=split_type, out_dir=output_path, out_filename="FNC_exp_v1_aggregated.csv",
     #                 type="aggregated")
 
-    return owner_output_dict
+    return owner_output_dict, local_output_dicts
 
 
 def cross_validate_aggregated_model(split_types, num_splits, pca=False, combine_all_local_tests=True):
@@ -292,25 +293,44 @@ def cross_validate_aggregated_model(split_types, num_splits, pca=False, combine_
             output_dict["split_type"] = split_type
             outputs.append(output_dict)
 
-    return paput.pp_metrics(*outputs, out_dir=output_path, out_filename=output_filename, type="aggregated")
+    return paput.pp_metrics(*outputs, columns=outputs[0].keys(), out_dir=output_path, out_filename=output_filename)
 
 
 def cross_validate_distributed_model(split_types, num_splits, pca=False, combine_all_local_tests=True):
     output_filename = "FNC_distributed_cv" + ("_sep_test.csv" if combine_all_local_tests else ".csv")
     outputs = []
+    local_outputs = []
     owner_node = 0
+    columns = None
 
     for split_type in split_types:
         for i in range(num_splits):
-            output_dict = build_distributed_model(owner_node_num=owner_node, split_type=split_type, split_num=i,
-                                                  pca=pca,
-                                                  combine_all_local_tests=combine_all_local_tests)
-
+            output_dict, local_output_dicts = build_distributed_model(owner_node_num=owner_node, split_type=split_type,
+                                                                      split_num=i, pca=pca,
+                                                                      combine_all_local_tests=combine_all_local_tests)
+            # Add split_type
             output_dict["split_type"] = split_type
+            local_output_dicts = [dict(local_dict, split_type=split_type) for local_dict in local_output_dicts]
+
+            # Add split id
+            output_dict["run_id"] = i
+            local_output_dicts = [dict(local_dict, run_id=i) for local_dict in local_output_dicts]
+
+            # Add node reference
+            output_dict["node_id"] = "distributed"
+            local_output_dicts = [dict(local_dict, node_id="local_" + str(indx + 1)) for indx, local_dict in
+                                  enumerate(local_output_dicts)]
+
+            columns = output_dict.keys() if columns is None else columns
+
             outputs.append(output_dict)
+            local_outputs.append(local_output_dicts)
 
-    return paput.pp_metrics(*outputs, out_dir=output_path, out_filename=output_filename, type="aggregated")
+    owner_df = paput.pp_metrics(*outputs, columns=outputs[0].keys(), out_dir=output_path, out_filename=output_filename)
+    local_df = paput.pp_metrics(*local_outputs, columns=outputs[0].keys(), out_dir=output_path,
+                                out_filename="locals_" + output_filename)
 
+    return owner_df, local_df
 
 def get_latex_table(split_types, agg_df, dist_df):
     mean_agg_df = agg_df.groupby('split_type').mean().round(3)
@@ -402,6 +422,13 @@ def generate_cv_metrics(num_splits):
     get_latex_table(split_types, agg_df, dist_df)
 
 
+def compare_local_vs_owner(num_splits, split_types=["random", "age_stratified", "age_range_stratified"]):
+    dist_owner_df, dist_local_df = cross_validate_distributed_model(split_types=split_types, num_splits=num_splits,
+                                                                    pca=False,
+                                                                    combine_all_local_tests=True)
+
+    pap_plt.plot_local_vs_owner(dist_owner_df, dist_local_df, output_path + "/FNC_local_vs_dist" + ".png")
+
 
 if __name__ == "__main__":
     """
@@ -414,4 +441,5 @@ if __name__ == "__main__":
     output_path = "/Users/sbasodi1/MEGA/work/trendz_2020/projects/brainage/brainage_fnc_rslt/paper/trends_decen_brainage/results"
 
     # build_aggregated_model(test_site_num=0, split_type=split_type, pca=False)
-    generate_cv_metrics(num_splits=5)
+    # generate_cv_metrics(num_splits=5)
+    compare_local_vs_owner(num_splits=5)
