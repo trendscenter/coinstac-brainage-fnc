@@ -344,6 +344,7 @@ def get_latex_table(split_types, agg_df, dist_df):
     row_disp_names = {'random': 'random', 'age_stratified': 'age stratified',
                       'age_range_stratified': 'age-bin stratified'}
 
+    print("Start latex code: \n")
     for row_name in split_types:
         print("&\\multirow{2}{*}{" + row_disp_names[row_name] + "} & Decentralized " +
               f"& ${mean_dist_df.loc[row_name]['rmse_train_aggregated']} \pm {std_dist_df.loc[row_name]['rmse_train_aggregated']}$"
@@ -358,6 +359,7 @@ def get_latex_table(split_types, agg_df, dist_df):
               f"& ${mean_agg_df.loc[row_name]['mae_train_aggregated']} \pm {std_agg_df.loc[row_name]['mae_train_aggregated']}$"
               f"& ${mean_agg_df.loc[row_name]['mae_test_aggregated']} \pm {std_agg_df.loc[row_name]['mae_test_aggregated']}$"
               f"\\\\")
+    print("\nDone latex code")
 
 
 
@@ -413,20 +415,19 @@ def generate_cv_metrics(num_splits):
     split_types = ["random", "age_stratified", "age_range_stratified"]
     agg_df = cross_validate_aggregated_model(split_types=split_types, num_splits=num_splits, pca=False,
                                              combine_all_local_tests=True)
-    dist_df = cross_validate_distributed_model(split_types=split_types, num_splits=num_splits, pca=False,
-                                               combine_all_local_tests=True)
-
-    stat_analysis(split_types, agg_df, dist_df)
-
-    # print latex table code
-    get_latex_table(split_types, agg_df, dist_df)
-
-
-def compare_local_vs_owner(num_splits, split_types=["random", "age_stratified", "age_range_stratified"]):
     dist_owner_df, dist_local_df = cross_validate_distributed_model(split_types=split_types, num_splits=num_splits,
                                                                     pca=False,
                                                                     combine_all_local_tests=True)
 
+    stat_analysis(split_types, agg_df, dist_owner_df)
+
+    # print latex table code
+    get_latex_table(split_types, agg_df, dist_owner_df)
+
+    # Generate box plot of the results of centralized and decentralized results
+    pap_plt.plot_centralized_vs_decentralized(agg_df.copy(), dist_owner_df.copy(), output_path + "/FNC_box_")
+
+    # Generate box plot comparision of decentralized local and owner results
     pap_plt.plot_local_vs_owner(dist_owner_df, dist_local_df, output_path + "/FNC_local_vs_dist" + ".png")
 
 
@@ -441,5 +442,6 @@ if __name__ == "__main__":
     output_path = "/Users/sbasodi1/MEGA/work/trendz_2020/projects/brainage/brainage_fnc_rslt/paper/trends_decen_brainage/results"
 
     # build_aggregated_model(test_site_num=0, split_type=split_type, pca=False)
-    # generate_cv_metrics(num_splits=5)
-    compare_local_vs_owner(num_splits=5)
+
+    # TODO: Make sure you generate partitions using "paper_dataset_generator.py" and run this script
+    generate_cv_metrics(num_splits=5)

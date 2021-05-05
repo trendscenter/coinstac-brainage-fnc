@@ -2,6 +2,7 @@ import math
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 
 
 def plot_from_pd_series(data_list, title, xlabel, ylabel, bin_scale, output_file):
@@ -44,7 +45,20 @@ def plot_data():
                         output_path + "fig_ukbiobank_data")
 
 
-def plot_local_vs_owner(dist_owner_df, dist_local_df, output_file):
+def plot_local_vs_owner(dist_owner_df, dist_local_df, output_file, show_legend=False):
+    SMALL_SIZE = 8
+    MEDIUM_SIZE = 12
+    BIGGER_SIZE = 18
+
+    # plt.rc('font', size=MEDIUM_SIZE)  # controls default text sizes
+    plt.rc('axes', titlesize=BIGGER_SIZE)  # fontsize of the axes title
+    plt.rc('axes', labelsize=BIGGER_SIZE)  # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=MEDIUM_SIZE)  # fontsize of the tick labels
+    plt.rc('ytick', labelsize=MEDIUM_SIZE)  # fontsize of the tick labels
+    plt.rc('legend', fontsize=BIGGER_SIZE)  # legend fontsize
+    # plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+    # plt.gca().yaxis.set_major_formatter(StrMethodFormatter('{x:,.1f}'))  # 2 decimal places
+
     dist_df_all = pd.concat([dist_local_df, dist_owner_df], ignore_index=True)
 
     metrics_to_plot = ['rmse_test_aggregated', 'mae_test_aggregated']
@@ -58,11 +72,13 @@ def plot_local_vs_owner(dist_owner_df, dist_local_df, output_file):
     buffer_lim = 0.1
 
     for row_num, metric in enumerate(metrics_to_plot):
-
+        y_min = 100
+        y_max = 0
         for col_num, curr_split_type in enumerate(split_types):
             curr_ax = axs[row_num, col_num]
             df = dist_df_all.loc[dist_df_all['split_type'] == curr_split_type]
-            y_lim = (min(df[metric]), max(df[metric]))
+            # y_min = min(min(df[metric]), y_min)
+            # y_max = max(max(df[metric]), y_max)
             for key, grp in df.groupby(['node_id'], sort=False):
                 alpha = 0.75 if key.startswith("local_") else 1
                 linestype = 'dashed' if key.startswith("local_") else 'solid'
@@ -73,24 +89,57 @@ def plot_local_vs_owner(dist_owner_df, dist_local_df, output_file):
                              alpha=alpha, lw=linewidth)
                 curr_ax.set_ylim([min(df[metric]) - buffer_lim, max(df[metric]) + buffer_lim])
                 if row_num == 0:
-                    curr_ax.set_title(f'{sampling_labels[curr_split_type]}')
+                    curr_ax.set_title(f'{sampling_labels[curr_split_type]}')  # , fontsize=18)
 
         # set labels
         plt.setp(axs[row_num, 0], ylabel=metric.split('_')[0].upper())
+        # Set y_limits
+        # plt.setp(axs[row_num, :], ylim=(y_min, y_max))
 
     plt.setp(axs[-1, :], xlabel='runs')
-    handles, labels = axs[0, -1].get_legend_handles_labels()
-    plt.legend(handles, labels, bbox_to_anchor=(1.04, 1.1), borderaxespad=0)
+    if show_legend:
+        handles, labels = axs[0, -1].get_legend_handles_labels()
+        plt.legend(handles, labels, bbox_to_anchor=(1.04, 1.1), borderaxespad=0)
 
-    # handles, labels = curr_ax.get_legend_handles_labels()
-    # fig.legend(handles, labels, loc='center right')
-    # plt.subplots_adjust(left=0.7)
-    # plt.tight_layout(rect=[0, 0, 0.75, 1])
-    # plt.legend(bbox_to_anchor=(1.04, 1), borderaxespad=0)
-    # fig.legend(handles, labels, loc="upper right", bbox_to_anchor=(1.04, 1))
-    # plt.subplots_adjust(left=0.07, right=0.93, wspace=0.25, hspace=0.35)
-    plt.savefig(output_file, bbox_inches='tight', dpi=1200)  #
-    plt.show()
+    # fig.patch.set_linewidth(2)
+    # fig.patch.set_edgecolor('black')
+    plt.savefig(output_file, bbox_inches='tight', dpi=600, edgecolor=fig.get_edgecolor())
+    # plt.savefig(output_file, bbox_inches='tight', dpi=600)
+    # plt.show()
+
+
+def plot_centralized_vs_decentralized(agg_df, dist_df, output_file_prefix, sync_ylims=False):
+    metrics_to_plot = ['rmse_test_aggregated', 'rmse_train_aggregated', 'mae_test_aggregated', 'mae_train_aggregated']
+    metrics_labels = {'rmse_test_aggregated': 'RMSE testing score', 'rmse_train_aggregated': 'RMSE training score',
+                      'mae_test_aggregated': 'MAE testing score', 'mae_train_aggregated': 'MAE training score'}
+
+    sampling_labels = {'random': 'random', 'age_stratified': 'age stratified',
+                       'age_range_stratified': 'age-bin stratified'}
+
+    for key, value in sampling_labels.items():
+        agg_df['split_type'] = agg_df['split_type'].replace(to_replace=key, value=value)
+        dist_df['split_type'] = dist_df['split_type'].replace(to_replace=key, value=value)
+
+    main_column = 'split_type'
+    if sync_ylims:
+        y_max = max(agg_df[metrics_to_plot].values.max(), dist_df[metrics_to_plot].values.max())
+        y_min = min(agg_df[metrics_to_plot].values.min(), dist_df[metrics_to_plot].values.min())
+
+    for metric_name in metrics_to_plot:
+        output_file = output_file_prefix + metric_name + ".png"
+        data1 = agg_df[[main_column, metric_name]].assign(Model='Centralized')
+        data2 = dist_df[[main_column, metric_name]].assign(Model='Decentralized')
+
+        cdf = pd.concat([data1, data2])
+        mdf = pd.melt(cdf, id_vars=['Model', 'split_type'], var_name=[metric_name])
+        # print(mdf.head())
+        ax = sns.boxplot(x="split_type", y="value", hue="Model", data=mdf)
+        ax.set(xlabel='', ylabel=metrics_labels[metric_name])
+        if sync_ylims: plt.ylim((y_min, y_max))
+        print(output_file)
+        plt.savefig(output_file, bbox_inches='tight', dpi=600)
+        # plt.show()
+        plt.clf()
 
 
 if __name__ == "__main__":

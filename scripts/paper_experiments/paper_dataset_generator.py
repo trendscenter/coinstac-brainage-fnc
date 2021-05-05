@@ -86,9 +86,11 @@ def merge_split_all_data(split_type, split_num, random_state, save_partitions=Fa
 if __name__ == "__main__":
     #generate_on_desktop(save_splits=False, plot_first_subject_comp_map=True)
 
+    # TODO: Run the following commented code to generate the data partitions across local clients
     """
-    for i in range(5):
-        merge_split_all_data(split_type="age_range_stratified", split_num=i,
-                             save_partitions=True, random_state=None)  # random, age_stratified, age_range_stratified
+    for split_type in ["random", "age_stratified", "age_range_stratified"]:
+        for i in range(5):
+            merge_split_all_data(split_type=spilt_type, split_num=i,
+                                save_partitions=True, random_state=None) # random, age_stratified, age_range_stratified
     """
     print("Done!")
