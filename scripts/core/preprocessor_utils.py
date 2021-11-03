@@ -19,7 +19,12 @@ def get_cell_array_data(hdf5_file, key_name):
     for column in hdf5_file[key_name]:
         row_data = []
         for row_number in range(len(column)):
-            row_data.append(''.join(map(chr, hdf5_file[column[row_number]][:])))
+            try:
+                row_data.append(''.join(map(chr, hdf5_file[column[row_number]][:])))
+            except:
+                subj_src_nii_path=''.join(map(chr, [item for sublist in hdf5_file[column[row_number]][:]
+                                                    for item in sublist]))
+                row_data.append(subj_src_nii_path)
         data.append(row_data)
     return data
 

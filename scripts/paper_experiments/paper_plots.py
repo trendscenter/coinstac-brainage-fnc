@@ -142,6 +142,45 @@ def plot_centralized_vs_decentralized(agg_df, dist_df, output_file_prefix, sync_
         plt.clf()
 
 
+def plot_num_sites_centralized_vs_decentralized(agg_df, dist_df, output_file_prefix, sync_ylims=False):
+    metrics_to_plot = ['rmse_test_aggregated', 'rmse_train_aggregated', 'mae_test_aggregated', 'mae_train_aggregated']
+    metrics_labels = {'rmse_test_aggregated': 'RMSE testing score', 'rmse_train_aggregated': 'RMSE training score',
+                      'mae_test_aggregated': 'MAE testing score', 'mae_train_aggregated': 'MAE training score'}
+
+    sampling_labels = {'random': 'random', 'age_stratified': 'age stratified',
+                       'age_range_stratified': 'age-bin stratified'}
+
+    for key, value in sampling_labels.items():
+        agg_df['split_type'] = agg_df['split_type'].replace(to_replace=key, value=value)
+        dist_df['split_type'] = dist_df['split_type'].replace(to_replace=key, value=value)
+
+    all_split_types=agg_df.split_type.unique()
+    main_column = 'num_sites'
+    for split_type in all_split_types:
+        agg_split_type_df = agg_df[agg_df['split_type'] == split_type]
+        dist_split_type_df = dist_df[dist_df['split_type'] == split_type]
+
+        if sync_ylims:
+            y_max = max(agg_split_type_df[metrics_to_plot].values.max(), dist_split_type_df[metrics_to_plot].values.max())
+            y_min = min(agg_split_type_df[metrics_to_plot].values.min(), dist_split_type_df[metrics_to_plot].values.min())
+
+        for metric_name in metrics_to_plot:
+            output_file = output_file_prefix + metric_name +"_"+ split_type + ".png"
+            data1 = agg_split_type_df[[main_column, metric_name]].assign(Model='Centralized')
+            data2 = dist_split_type_df[[main_column, metric_name]].assign(Model='Decentralized')
+
+            cdf = pd.concat([data1, data2])
+            mdf = pd.melt(cdf, id_vars=['Model', main_column], var_name=[metric_name])
+            # print(mdf.head())
+            ax = sns.boxplot(x=main_column, y="value", hue="Model", data=mdf)
+            ax.set(xlabel='', ylabel=metrics_labels[metric_name])
+            if sync_ylims: plt.ylim((y_min, y_max))
+            print(output_file)
+            plt.savefig(output_file, bbox_inches='tight', dpi=600)
+            # plt.show()
+            plt.clf()
+
+
 if __name__ == "__main__":
     output_path = "/Users/sbasodi1/MEGA/work/trendz_2020/projects/brainage/brainage_fnc_rslt/paper/trends_decen_brainage/results"
 

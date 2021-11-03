@@ -5,7 +5,6 @@ import json
 import os
 
 import numpy as np
-import pandas as pd
 from sklearn import preprocessing
 from sklearn.pipeline import make_pipeline
 from sklearn.svm import LinearSVR
@@ -70,60 +69,24 @@ def aggregated_SVR(X_train, X_test, y_train, y_test):
 
     return regr, output_dict
 
-def combine_all_local_data_with_subj():
+
+def combine_all_local_data(num_sites, test_site_num, split_type, split_num):
     """
     Combines data from all the local sites.
     """
-    X_all, y_all, subj_all = None, None, None
-    split_type="random_split_0"
-    for indx, conf in enumerate(json.loads(open(TEST_DIR + 'inputspec.json').read())):
-        input_dir = TEST_DIR + f"input/local{indx}/simulatorRun/"
-        [local_X_train, local_y_train] = paput.form_XYMatrices_from_csv(input_dir=os.path.join(input_dir, split_type),
-                                                                        input_file=f"local{indx}_fnc_age_train.csv")
-        [local_X_test, local_y_test] = paput.form_XYMatrices_from_csv(input_dir=os.path.join(input_dir, split_type),
-                                                                      input_file=f"local{indx}_fnc_age_test.csv")
-        local_subj_train = pd.read_csv(os.path.join(input_dir,split_type, f"local{indx}_subject_ref_filename_train.csv"),
-                                          header=None).to_numpy()
-        local_subj_test = pd.read_csv(os.path.join(input_dir, split_type,f"local{indx}_subject_ref_filename_test.csv"),
-                                         header=None).to_numpy()
+    X_train, X_test, y_train, y_test = get_local_site_data(num_sites= num_sites, local_site_num=test_site_num,
+                                                           split_type=split_type)
 
-        X = np.vstack((local_X_train, local_X_test))
-        y = np.hstack((local_y_train, local_y_test))
-        subj=np.vstack((local_subj_train, local_subj_test))
-
-        if X_all is None:
-            X_all = X
-            y_all = y
-            subj_all = subj
-        else:
-            X_all = np.vstack((X_all, X))
-            y_all = np.hstack((y_all, y))
-            subj_all = np.vstack((subj_all, subj))
-
-
-    return (X_all, y_all, subj_all)
-
-
-def combine_all_local_data(test_site_num, split_type, split_num):
-    """
-    Combines data from all the local sites.
-    """
-    X_train, X_test, y_train, y_test = get_local_site_data(local_site_num=test_site_num, split_type=split_type,
-                                                           split_num=split_num)
-    inputspec = json.loads(open(TEST_DIR + 'inputspec.json').read())
-
-
-    for indx, conf in enumerate(inputspec):
+    #for indx, conf1 in enumerate(json.loads(open(TEST_DIR + 'inputspec.json').read())):
+    for indx in range(num_sites):
         if indx != test_site_num:
-            input_dir = TEST_DIR + f"input/local{indx}/simulatorRun/"
-            input_dir = os.path.join(TEST_DIR, f"input/local{indx}/simulatorRun/", split_type + (
+            input_dir = os.path.join(TEST_DIR, f"input-sitetest-{num_sites}/local{indx}/simulatorRun/", split_type + (
                 "_split_" + str(split_num) if split_num is not None else ""))
-
-            [local_X_train, local_y_train] = paput.form_XYMatrices_from_csv(input_dir=os.path.join(input_dir, split_type),
-                                                                            input_file=f"local{indx}_fnc_age_train.csv")
-            [local_X_test, local_y_test] = paput.form_XYMatrices_from_csv(input_dir=os.path.join(input_dir, split_type),
+            [local_X_train, local_y_train] = paput.form_XYMatrices_from_csv(
+                input_dir=input_dir,
+                input_file=f"local{indx}_fnc_age_train.csv")
+            [local_X_test, local_y_test] = paput.form_XYMatrices_from_csv(input_dir=input_dir,
                                                                           input_file=f"local{indx}_fnc_age_test.csv")
-
 
             X_train = np.vstack((X_train, local_X_train))
             X_train = np.vstack((X_train, local_X_test))
@@ -133,16 +96,18 @@ def combine_all_local_data(test_site_num, split_type, split_num):
     return (X_train, X_test, y_train, y_test)
 
 
-def combine_all_local_data_sep_test(split_type, split_num):
+def combine_all_local_data_sep_test(split_type, num_sites, split_num):
     """
     Combines data from all the local sites.
     """
     X_train, y_train, X_test, y_test = None, None, None, None
-    for indx, conf in enumerate(json.loads(open(TEST_DIR + 'inputspec.json').read())):
-        input_dir = TEST_DIR + f"input/local{indx}/simulatorRun/"
-        input_dir = os.path.join(TEST_DIR, f"input/local{indx}/simulatorRun/", split_type + (
-            "_split_" + str(split_num) if split_num is not None else ""))
 
+    #for indx, conf1 in enumerate(json.loads(open(TEST_DIR + 'inputspec.json').read())):
+    for indx in range(num_sites):
+
+        input_dir = os.path.join(TEST_DIR, f"input-sitetest-{num_sites}/local{indx}/simulatorRun/", split_type + (
+            "_split_" + str(split_num) if split_num is not None else ""))
+        # print("Processing data from inputdir: ", input_dir)
         [local_X_train, local_y_train] = paput.form_XYMatrices_from_csv(input_dir=input_dir,
                                                                         input_file=f"local{indx}_fnc_age_train.csv")
         [local_X_test, local_y_test] = paput.form_XYMatrices_from_csv(input_dir=input_dir,
@@ -162,17 +127,15 @@ def combine_all_local_data_sep_test(split_type, split_num):
     return (X_train, X_test, y_train, y_test)
 
 
-def get_local_site_data(local_site_num, split_type, split_num):
-    conf = json.loads(open(TEST_DIR + 'inputspec.json').read())[local_site_num]
-    input_dir = TEST_DIR + f"input/local{local_site_num}/simulatorRun/"
-    input_dir = os.path.join(TEST_DIR, f"input/local{local_site_num}/simulatorRun/", split_type + (
-        "_split_" + str(split_num) if split_num is not None else ""))
+def get_local_site_data(num_sites, local_site_num, split_type, split_num):
+    input_dir = TEST_DIR + f"input-sitetest-{num_sites}/local{local_site_num}/simulatorRun/"
+    input_dir = os.path.join(TEST_DIR, f"input-sitetest-{num_sites}/local{local_site_num}/simulatorRun/", split_type +
+                             ("_split_" + str(split_num) if split_num is not None else ""))
 
     [local_X_train, local_y_train] = paput.form_XYMatrices_from_csv(input_dir=input_dir,
                                                                     input_file=f"local{local_site_num}_fnc_age_train.csv")
     [local_X_test, local_y_test] = paput.form_XYMatrices_from_csv(input_dir=input_dir,
                                                                   input_file=f"local{local_site_num}_fnc_age_test.csv")
-
 
     return local_X_train, local_X_test, local_y_train, local_y_test
 
@@ -197,42 +160,45 @@ def perform_pca(X_train, X_test):
     return X_train_pca, X_test_pca
 
 
-def build_aggregated_model(test_site_num, split_type, split_num, pca=False, combine_all_local_tests=False):
-
+def build_aggregated_model(test_site_num, split_type, num_sites, split_num, pca=False, combine_all_local_tests=False):
     if combine_all_local_tests:
-        X_train, X_test, y_train, y_test = combine_all_local_data_sep_test(split_type=split_type, split_num=split_num)
+        X_train, X_test, y_train, y_test = combine_all_local_data_sep_test(split_type=split_type, num_sites=num_sites,
+                                                                           split_num=split_num)
     else:
-        X_train, X_test, y_train, y_test = combine_all_local_data(test_site_num=test_site_num, split_type=split_type,
-                                                                  split_num=split_num)
+        X_train, X_test, y_train, y_test = combine_all_local_data(num_sites=num_sites, test_site_num=test_site_num,
+                                                                  split_type=split_type, split_num=split_num)
 
-    print(f"Combined train and test data from all the local clients, split_type:{split_type}, split_num: {split_num}" )
+    print("Combined train and test data from all the local clients.")
     if pca:
         print("Using PCA features..")
         X_train, X_test = perform_pca(X_train, X_test)
 
-    print("Running SVR now.")
+    print("Running SVR now. Owner node: local" + str(test_site_num))
     model, output_dict = aggregated_SVR(X_train, X_test, y_train, y_test)
-    #print(output_dict)
+    print(output_dict)
 
     # paput.pp_metrics(output_dict, split_type=split_type, out_dir=output_path, out_filename="FNC_exp_v1_aggregated.csv",
     #                 type="aggregated")
+
     return output_dict
 
 
-def get_distributed_model(owner_node_num, split_type, split_num):
+def get_distributed_model(num_sites, owner_node_num, split_type, split_num):
     local_output_dicts = []
     local_weights = []
 
-    X_owner_train, X_owner_test, y_owner_train, y_owner_test = get_local_site_data(local_site_num=owner_node_num,
+    X_owner_train, X_owner_test, y_owner_train, y_owner_test = get_local_site_data(num_sites=num_sites,
+                                                                                   local_site_num=owner_node_num,
                                                                                    split_type=split_type,
                                                                                    split_num=split_num)
     X_all_test, y_all_test = X_owner_test, y_owner_test
     # Train local models
-    for indx, conf in enumerate(json.loads(open(TEST_DIR + 'inputspec.json').read())):
+    #for indx, conf1 in enumerate(json.loads(open(TEST_DIR + 'inputspec.json').read())):
+    for indx in range(num_sites):
         if indx != owner_node_num:
-            input_dir = TEST_DIR + f"input/local{indx}/simulatorRun/"
+            input_dir = TEST_DIR + f"input-sitetest-{num_sites}/local{indx}/simulatorRun/"
 
-            input_dir = os.path.join(TEST_DIR, f"input/local{indx}/simulatorRun/", split_type + (
+            input_dir = os.path.join(TEST_DIR, f"input-sitetest-{num_sites}/local{indx}/simulatorRun/", split_type + (
                 "_split_" + str(split_num) if split_num is not None else ""))
 
             [local_X_train, local_y_train] = paput.form_XYMatrices_from_csv(input_dir=input_dir,
@@ -269,11 +235,9 @@ def get_distributed_model(owner_node_num, split_type, split_num):
     return owner_output_dict, local_output_dicts
 
 
-def build_distributed_model(owner_node_num, split_type, split_num, pca, combine_all_local_tests=False):
-    print(f"Running distributed SVR now. Owner node: local{str(owner_node_num)}, split_type:{split_type}, "
-          f"split_num: {split_num}" )
-
-    owner_output_dict, local_output_dicts = get_distributed_model(owner_node_num, split_type, split_num)
+def build_distributed_model(owner_node_num, split_type, num_sites, split_num, pca, combine_all_local_tests=False):
+    print("Running distributed SVR now. Owner node: local" + str(owner_node_num))
+    owner_output_dict, local_output_dicts = get_distributed_model(num_sites, owner_node_num, split_type, split_num)
     print(owner_output_dict)
 
     # paput.pp_metrics(output_dict, split_type=split_type, out_dir=output_path, out_filename="FNC_exp_v1_aggregated.csv",
@@ -282,35 +246,44 @@ def build_distributed_model(owner_node_num, split_type, split_num, pca, combine_
     return owner_output_dict, local_output_dicts
 
 
-def cross_validate_aggregated_model(split_types, num_splits, pca=False, combine_all_local_tests=True):
-    output_filename = "FNC_aggregated_cv" + ("_sep_test.csv" if combine_all_local_tests else ".csv")
+def cross_validate_aggregated_model(split_types, num_splits, num_sites_list, pca=False, combine_all_local_tests=True):
+    output_filename = "FNC_aggr_CV_sites_" + ("_sep_test.csv" if combine_all_local_tests else ".csv")
     outputs = []
 
     for split_type in split_types:
-        for i in range(num_splits):
-            output_dict = build_aggregated_model(test_site_num=i, split_type=split_type, split_num=i, pca=pca,
-                                                 combine_all_local_tests=combine_all_local_tests)
-            output_dict["split_type"] = split_type
-            outputs.append(output_dict)
+        for num_sites in num_sites_list:
+            for i in range(num_splits):
+                output_dict = build_aggregated_model(test_site_num=i, split_type=split_type, num_sites=num_sites,
+                                                     split_num=i, pca=pca,
+                                                     combine_all_local_tests=combine_all_local_tests)
+                output_dict["split_type"] = split_type
+                output_dict["num_sites"] = num_sites
+                output_dict["run_id"] = i
+                outputs.append(output_dict)
 
     return paput.pp_metrics(*outputs, columns=outputs[0].keys(), out_dir=output_path, out_filename=output_filename)
 
 
-def cross_validate_distributed_model(split_types, num_splits, pca=False, combine_all_local_tests=True):
+def cross_validate_distributed_model(split_types, num_splits, num_sites_list, pca=False, combine_all_local_tests=True):
     output_filename = "FNC_distributed_cv" + ("_sep_test.csv" if combine_all_local_tests else ".csv")
     outputs = []
     local_outputs = []
     owner_node = 0
-    columns = None
 
+    columns = None
     for split_type in split_types:
+      for num_sites in num_sites_list:
         for i in range(num_splits):
             output_dict, local_output_dicts = build_distributed_model(owner_node_num=owner_node, split_type=split_type,
-                                                                      split_num=i, pca=pca,
+                                                                      num_sites=num_sites, split_num=i, pca=pca,
                                                                       combine_all_local_tests=combine_all_local_tests)
             # Add split_type
             output_dict["split_type"] = split_type
             local_output_dicts = [dict(local_dict, split_type=split_type) for local_dict in local_output_dicts]
+
+            # Add num_sites
+            output_dict["num_sites"] = num_sites
+            local_output_dicts = [dict(local_dict, num_sites=num_sites) for local_dict in local_output_dicts]
 
             # Add split id
             output_dict["run_id"] = i
@@ -322,7 +295,6 @@ def cross_validate_distributed_model(split_types, num_splits, pca=False, combine
                                   enumerate(local_output_dicts)]
 
             columns = output_dict.keys() if columns is None else columns
-
             outputs.append(output_dict)
             local_outputs.append(local_output_dicts)
 
@@ -331,6 +303,7 @@ def cross_validate_distributed_model(split_types, num_splits, pca=False, combine
                                 out_filename="locals_" + output_filename)
 
     return owner_df, local_df
+
 
 def get_latex_table(split_types, agg_df, dist_df):
     mean_agg_df = agg_df.groupby('split_type').mean().round(3)
@@ -343,7 +316,6 @@ def get_latex_table(split_types, agg_df, dist_df):
 
     row_disp_names = {'random': 'random', 'age_stratified': 'age stratified',
                       'age_range_stratified': 'age-bin stratified'}
-
     print("Start latex code: \n")
     for row_name in split_types:
         print("&\\multirow{2}{*}{" + row_disp_names[row_name] + "} & Decentralized " +
@@ -359,11 +331,11 @@ def get_latex_table(split_types, agg_df, dist_df):
               f"& ${mean_agg_df.loc[row_name]['mae_train_aggregated']} \pm {std_agg_df.loc[row_name]['mae_train_aggregated']}$"
               f"& ${mean_agg_df.loc[row_name]['mae_test_aggregated']} \pm {std_agg_df.loc[row_name]['mae_test_aggregated']}$"
               f"\\\\")
+
     print("\nDone latex code")
 
 
-
-def stat_analysis(split_types, agg_df, dist_df):
+def stat_analysis(split_types, num_sites_list, agg_df, dist_df):
     from scipy.stats import ttest_ind
     from scipy.stats import wilcoxon
 
@@ -375,13 +347,16 @@ def stat_analysis(split_types, agg_df, dist_df):
     columns = ['rmse_train_aggregated', 'rmse_test_aggregated', 'mae_train_aggregated', 'mae_test_aggregated']
 
     for split_type in split_types:
+      agg_vals_split_type_df = agg_df[agg_df['split_type'] == split_type]
+      dist_vals_split_type_df = dist_df[dist_df['split_type'] == split_type]
+      for num_sites in num_sites_list:
         t_res = []
         wilcoxon_res = []
         for metric in columns:
             # print("Performing t-test for split_type: ", split_type, " metric: ", metric)
 
-            agg_vals = agg_df[agg_df['split_type'] == split_type][metric]
-            dist_vals = dist_df[dist_df['split_type'] == split_type][metric]
+            agg_vals = agg_vals_split_type_df[agg_vals_split_type_df['num_sites'] == num_sites][metric]
+            dist_vals = dist_vals_split_type_df[dist_vals_split_type_df['num_sites'] == num_sites][metric]
 
             stat, p = ttest_ind(agg_vals.values, dist_vals.values, equal_var=False)
 
@@ -411,37 +386,38 @@ def stat_analysis(split_types, agg_df, dist_df):
     print("wilcoxon-test: \n", out_wilcxn_test)
 
 
-def generate_cv_metrics(num_splits):
-    split_types = ["random", "age_stratified", "age_range_stratified"]
-    agg_df = cross_validate_aggregated_model(split_types=split_types, num_splits=num_splits, pca=False,
-                                             combine_all_local_tests=True)
+def generate_cv_metrics(num_sites_list, split_types, num_splits):
+    agg_df = cross_validate_aggregated_model(split_types=split_types, num_splits=num_splits,
+                                             num_sites_list=num_sites_list,
+                                             pca=False, combine_all_local_tests=True)
     dist_owner_df, dist_local_df = cross_validate_distributed_model(split_types=split_types, num_splits=num_splits,
+                                                                    num_sites_list=num_sites_list,
                                                                     pca=False,
                                                                     combine_all_local_tests=True)
 
-    stat_analysis(split_types, agg_df, dist_owner_df)
+    stat_analysis(split_types, num_sites_list, agg_df, dist_owner_df)
 
     # print latex table code
-    get_latex_table(split_types, agg_df, dist_owner_df)
+    # get_latex_table(split_types, agg_df, dist_owner_df)
 
     # Generate box plot of the results of centralized and decentralized results
-    pap_plt.plot_centralized_vs_decentralized(agg_df.copy(), dist_owner_df.copy(), output_path + "/FNC_box_")
+    pap_plt.plot_num_sites_centralized_vs_decentralized(agg_df.copy(), dist_owner_df.copy(),
+                                                        output_path + f"/FNC_num_sites_{len(num_sites_list)}_box_")
 
     # Generate box plot comparision of decentralized local and owner results
-    pap_plt.plot_local_vs_owner(dist_owner_df, dist_local_df, output_path + "/FNC_local_vs_dist" + ".png")
+    #pap_plt.plot_local_vs_owner(dist_owner_df, dist_local_df, output_path + "/FNC_num_sites_local_vs_dist" + ".png")
 
 
 if __name__ == "__main__":
-    """
-    owner_node_num=0
-    split_type = "age_stratified"
-    print("owner_node: local"+str(owner_node_num))
-    build_aggregated_model(owner_node_num,pca=False, split_type=split_type)
-    """
-
     output_path = "/Users/sbasodi1/MEGA/work/trendz_2020/projects/brainage/brainage_fnc_rslt/paper/trends_decen_brainage/results"
-
+    output_path = "/Users/sunitha/workplace/brainage/results/brainage_fnc_rslt"
     # build_aggregated_model(test_site_num=0, split_type=split_type, pca=False)
 
     # TODO: Make sure you generate partitions using "paper_dataset_generator.py" and run this script
-    generate_cv_metrics(num_splits=5)
+
+    #exp_split_types = ["random", "age_stratified", "age_range_stratified"]
+    #exp_num_sites_list=list(range(2,6))
+
+    exp_split_types = [ "random", "age_range_stratified"]
+    exp_num_sites_list=list(range(2,11))
+    generate_cv_metrics(num_sites_list=exp_num_sites_list, split_types=exp_split_types, num_splits=5)
