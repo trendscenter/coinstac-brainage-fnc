@@ -526,4 +526,4 @@ The full result is displayed in the UI as an object string:
 
 As shown here:
 
-![Results View](https://raw.githubusercontent.com/trendscenter/coinstac-brainage-fnc/tree/main/test/results/results.png "Results View")
+![Results View](https://raw.githubusercontent.com/trendscenter/coinstac-brainage-fnc/main/test/results/results.png?token=GHSAT0AAAAAABXRZMBVPZ66UM5K2IO4BWEOYZBATBQ "Results View")
